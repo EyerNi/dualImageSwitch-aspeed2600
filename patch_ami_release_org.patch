@@ -1,0 +1,21 @@
+--- ami_release_org.patch	2024-03-09 11:44:17.214326425 +0800
++++ new_ami_release_org.patch	2024-03-09 11:50:50.013732611 +0800
+@@ -3,9 +3,15 @@ diff -Naur uboot/oem/ami/fmh/ast_wdt.c u
+ --- uboot/oem/ami/fmh/ast_wdt.c	2021-03-25 17:49:52.125309540 -0400
+ +++ uboot_new/oem/ami/fmh/ast_wdt.c	2021-03-25 17:49:04.000000000 -0400
+ @@ -65,10 +65,6 @@
+-        {
+- 	       *((volatile unsigned long *)(FMC_WDT2_REG)) |= WDT2_SECOND_BOOT_CODE;//clear boot src
+-        }
++/* if (oem dual image cmd)odic_set_boot_indicator configed the next boot img,
++** by ast2600 soc register design ,we will _KEEP_ this boot indicator,
++** for always booting form the img that configed by odic_set_boot_indicator,
++** therefore, for all ABR event triggered by wdt2 will follow this behave.
++** EyerNi 23/11/17
++**/
++        //{
++ 	      // *((volatile unsigned long *)(FMC_WDT2_REG)) |= WDT2_SECOND_BOOT_CODE;//clear boot src
++        //}
+ -#else
+ -       /* Enable back the Watchdog timer to start the Watchdog */
+ -       /* Also set the Flag to reset the CPU on Timeout */
