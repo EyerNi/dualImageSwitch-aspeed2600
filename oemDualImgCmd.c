@@ -141,7 +141,7 @@ odic_get_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int
   }
   else if (cmd_status == ODIC_SUCC)
   {
-    *pRes = CC_NORMAL;
+    *pRes = /*rm NDA info*/ 0;
     *(pRes + sizeof(u8)) = next_boot_spi_index;
     return sizeof(u8) * 2;
   }
