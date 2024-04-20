@@ -3,7 +3,7 @@
 odic moduel programing:
   1.open_fmc_stdin
     for opening register mapping
-  2.share_fmc_stdin
+  2.read_and_write_fmc_stdin
     for writing and reading register
   3.close_fmc_stdin
     for closing register mapping
@@ -46,16 +46,16 @@ u8 *fmc_stdin = NULL;
 signed memdev = -1;
 
 /*pre define*/
-ODIC static odic_res_e open_fmc_stdin(void);
-ODIC static odic_res_e close_fmc_stdin(void);
-ODIC static odic_res_e reverse_img(void);
-ODIC static odic_res_e clear_boot_indicator_to_0(void);
-ODIC static odic_res_e get_boot_indicator(u8 *next_boot_spi_index);
-ODIC ipmi_odic_res odic_get_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int __attribute__((unused)) BMCInst);
-ODIC ipmi_odic_res odic_set_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int __attribute__((unused)) BMCInst);
+ODIC open_fmc_stdin(void);
+ODIC close_fmc_stdin(void);
+ODIC reverse_img(void);
+ODIC clear_boot_indicator_to_0(void);
+ODIC get_boot_indicator(u8 *next_boot_spi_index);
+ipmi_odic_res odic_get_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int __attribute__((unused)) BMCInst);
+ipmi_odic_res odic_set_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int __attribute__((unused)) BMCInst);
 
 /*odic moduel std input open*/
-ODIC static odic_res_e
+ODIC
 open_fmc_stdin(void)
 {
   memdev = open("/dev/mem", O_RDWR | O_NDELAY);
@@ -72,7 +72,7 @@ open_fmc_stdin(void)
 }
 
 /*odic moduel std input close*/
-ODIC static odic_res_e
+ODIC
 close_fmc_stdin(void)
 {
   close(memdev);
@@ -83,45 +83,42 @@ close_fmc_stdin(void)
 }
 
 /* get next boot spi index */
-ODIC static odic_res_e
+ODIC
 get_boot_indicator(u8 *next_boot_spi_index)
 {
-  if (ODIC_SUCC != open_fmc_stdin())
-    return ODIC_MEM_MAP_FAIL;
+  OPEN_FMC;
 
-  *next_boot_spi_index = (share_fmc_stdin(FMC_WDT2_CRAB_IO_ADDR_OFFSET) & FMC_WDT2_BIT4_BOOT_INDICATOR) >> 4;
-  (void)close_fmc_stdin();
-  return ODIC_SUCC;
+  *next_boot_spi_index = (read_and_write_fmc_stdin(FMC_WDT2_CRAB_IO_ADDR_OFFSET) & FMC_WDT2_BIT4_BOOT_INDICATOR) >> 4;
+
+  CLOSE_FMC;
 }
 
 /* clear boot indicator to 0 */
-ODIC static odic_res_e
+ODIC
 clear_boot_indicator_to_0(void)
 {
-  if (ODIC_SUCC != open_fmc_stdin())
-    return ODIC_MEM_MAP_FAIL;
+  OPEN_FMC;
 
-  share_fmc_stdin(FMC_WDT2_CRAB_IO_ADDR_OFFSET) |= FMC_WDT2_CMD_CLEAR_BOOT_INDICATOR;
-  (void)close_fmc_stdin();
-  return ODIC_SUCC;
+  read_and_write_fmc_stdin(FMC_WDT2_CRAB_IO_ADDR_OFFSET) |= FMC_WDT2_CMD_CLEAR_BOOT_INDICATOR;
+
+  CLOSE_FMC;
 }
 
 /* goto spix = (nowspi == spi0 ? spi1 : spi0) */
-ODIC static odic_res_e
+ODIC
 reverse_img(void)
 {
-  if (ODIC_SUCC != open_fmc_stdin())
-    return ODIC_MEM_MAP_FAIL;
+  OPEN_FMC;
 
-  share_fmc_stdin(FMC_WDT2_CRAB_IO_ADDR_OFFSET) |= FMC_WDT2_BIT0_ENABLE;
-  share_fmc_stdin(FMC_WDT2_TRVR_IO_ADDR_OFFSET) = FMC_WDT2_COUNTDOWN;
-  share_fmc_stdin(FMC_WDT2_TRR_IO_ADDR_OFFSET) = FMC_WDT2_TRR_KEY;
-  (void)close_fmc_stdin();
-  return ODIC_SUCC;
+  read_and_write_fmc_stdin(FMC_WDT2_CRAB_IO_ADDR_OFFSET) |= FMC_WDT2_BIT0_ENABLE;
+  read_and_write_fmc_stdin(FMC_WDT2_TRVR_IO_ADDR_OFFSET) = FMC_WDT2_COUNTDOWN;
+  read_and_write_fmc_stdin(FMC_WDT2_TRR_IO_ADDR_OFFSET) = FMC_WDT2_TRR_KEY;
+
+  CLOSE_FMC;
 }
 
 /*odic moduel ipmi interface get active image index*/
-ODIC ipmi_odic_res
+IPMICMD_DEF(0xff,0xff-1,oem,fffff)
 odic_get_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int __attribute__((unused)) BMCInst)
 {
   if (0)
@@ -151,7 +148,7 @@ odic_get_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int
 }
 
 /*odic moduel ipmi interface set active image index*/
-ODIC ipmi_odic_res
+IPMICMD_DEF(0xff,0xff,oem,fffff)
 odic_set_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int __attribute__((unused)) BMCInst)
 {
   if (0)
@@ -193,7 +190,7 @@ odic_set_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int
 }
 
 /*useless*/
-ODIC odic_res_e
+ODIC __attribute__((unused))
 ODIC_UNUSE(void)
 {
   if (0)

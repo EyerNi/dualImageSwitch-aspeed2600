@@ -13,7 +13,6 @@ extern "C"
 
 #define _NEAR_
 #define _FAR_
-#define ODIC /*oem dual image cmd*/
 
 // #define odic_debug_enable
 #ifdef odic_debug_enable
@@ -44,7 +43,20 @@ extern "C"
 #pragma erro("platform none 2600")
 #endif
 
-#define share_fmc_stdin(offset) (*(volatile u32 *)(fmc_stdin + offset))
+#define IPMICMD_DEF(netfun, cmd, specInfo, implementer...) ipmi_odic_res
+
+#define OPEN_FMC                     \
+  if (ODIC_SUCC != open_fmc_stdin()) \
+    return ODIC_MEM_MAP_FAIL;
+
+#define CLOSE_FMC          \
+  (void)close_fmc_stdin(); \
+  return ODIC_SUCC;
+
+#define read_and_write_fmc_stdin(offset) (*(volatile u32 *)(fmc_stdin + offset))
+
+/*oem dual image cmd*/
+#define ODIC static odic_res_e
 
   typedef int ipmi_odic_res;
   typedef unsigned char u8;
@@ -58,8 +70,8 @@ extern "C"
     ODIC_SUCC = 0
   } odic_res_e;
 
-  ODIC ipmi_odic_res odic_get_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int __attribute__((unused)) BMCInst);
-  ODIC ipmi_odic_res odic_set_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int __attribute__((unused)) BMCInst);
+  ipmi_odic_res odic_get_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int __attribute__((unused)) BMCInst);
+  ipmi_odic_res odic_set_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int __attribute__((unused)) BMCInst);
 #ifdef __cplusplus
 }
 #endif
