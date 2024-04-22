@@ -131,20 +131,15 @@ odic_get_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int
 
   odic_res_e cmd_status = get_boot_indicator(&next_boot_spi_index);
 
-  if (cmd_status == ODIC_FILE_ACCESS_FILE || cmd_status == ODIC_MEM_MAP_FAIL)
+  if (cmd_status != ODIC_SUCC)
   {
     *pRes = -1 /*rm NDA info*/;
     return sizeof(u8);
   }
-  else if (cmd_status == ODIC_SUCC)
-  {
-    *pRes = /*rm NDA info*/ 0;
-    *(pRes + sizeof(u8)) = next_boot_spi_index;
-    return sizeof(u8) * 2;
-  }
 
-  *pRes = /* ? */ -1 /*rm NDA info*/;
-  return sizeof(u8);
+  *pRes = /*rm NDA info*/ 0;
+  *(pRes + sizeof(u8)) = next_boot_spi_index;
+  return sizeof(u8) * 2;
 }
 
 /*odic moduel ipmi interface set active image index*/
@@ -164,7 +159,7 @@ odic_set_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int
 
   u8 next_boot_spi_index = 0xff;
   odic_res_e cmd_status = get_boot_indicator(&next_boot_spi_index);
-  if (cmd_status == ODIC_FILE_ACCESS_FILE || cmd_status == ODIC_MEM_MAP_FAIL)
+  if (cmd_status != ODIC_SUCC)
   {
     *pRes = /*rm NDA info*/ -1;
     return sizeof(u8);
@@ -178,9 +173,9 @@ odic_set_boot_indicator(_NEAR_ u8 *pReq, u32 ReqLen, _NEAR_ u8 *pRes, _NEAR_ int
 
   cmd_status = reverse_img();
 
-  if (cmd_status == ODIC_FILE_ACCESS_FILE || cmd_status == ODIC_MEM_MAP_FAIL)
+  if (cmd_status != ODIC_SUCC)
     *pRes = /*rm NDA info*/ -1;
-  else if (cmd_status == ODIC_SUCC)
+  else
     *pRes = /*rm NDA info*/ 0;
 
   if (*pRes == /*rm NDA info*/ 0)
